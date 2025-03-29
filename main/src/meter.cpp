@@ -1880,7 +1880,7 @@ void mesh_event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(MESH_TAG, "Mesh unknown id:%d", event_id);
         break;
     }
-} // MESH_TAG ESPM_E63C64
+} 
 
 void send_internal_emergency(char * msg, uint32_t err)
 {
@@ -2696,4 +2696,3 @@ void app_main(void)
        
 
 }
-//dev
