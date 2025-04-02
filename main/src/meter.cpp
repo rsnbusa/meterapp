@@ -325,12 +325,15 @@ int  turn_display(char *cmd,char *mid)
                 }
                 else
                 {
-                    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, false));
-                    if(showHandle)
-                        vTaskDelete(showHandle);
-                    showHandle=NULL;
-                    if(dispTimer)
-                        xTimerStop(dispTimer,0);
+                    if(duration==0)
+                    {
+                        ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, false));
+                        if(showHandle)
+                            vTaskDelete(showHandle);
+                        showHandle=NULL;
+                        if(dispTimer)
+                            xTimerStop(dispTimer,0);
+                    }
 
                 }
            }
@@ -2587,9 +2590,9 @@ void start_mesh()
     // bzero(mipassw,sizeof(mipassw));
     if(strlen(theConf.thessid)==0)
     {
-        strcpy(missid,"RSNNetFlix");
+        strcpy(missid,"NETLIFE-RSNCasa");
         strcpy(mipassw,"csttpstt"); //8 chars at least
-        strcpy(theConf.thessid,"RSNNetFlix");
+        strcpy(theConf.thessid,"NETLIFE-RSNCasa");
         strcpy(theConf.thepass,"csttpstt");
         write_to_flash();
     }
