@@ -37,6 +37,7 @@ set (src
     kbd/cmdPrepaid.cpp
     kbd/cmdResetConf.cpp
     kbd/cmdSecurity.cpp
+    kbd/cmdNode.cpp
     )
 
     set (html 

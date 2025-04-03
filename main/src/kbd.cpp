@@ -50,6 +50,11 @@ void kbd(void *pArg)
   appSSID.nopass=                   arg_str0(NULL, "l", "nA", "SSID Change");
   appSSID.end=                      arg_end(3);
 
+  appNode.password=                 arg_str0(NULL, "p", "password", "Node Change");
+  appNode.newpass=                  arg_str0(NULL, "n", "new Node", "Node Change");
+  appNode.nopass=                   arg_str0(NULL, "l", "nA", "Node Change");
+  appNode.end=                      arg_end(3);
+
   logArgs.show =                  arg_int0(NULL, "show", "# of lines", "Show logs");
   logArgs.erase =                 arg_int0(NULL, "erase", "0/1" ,"Erase logs");
   logArgs.end =                   arg_end(2);
@@ -177,6 +182,14 @@ void kbd(void *pArg)
         .argtable = &appSSID
     };
 
+     node_cmd= {
+        .command = "node",
+        .help = "Set node Id",
+        .hint = NULL,
+        .func = &cmdNode,
+        .argtable = &appNode
+    };
+
        log_cmd = {
         .command = "log",
         .help = "Log options",
@@ -214,6 +227,7 @@ void kbd(void *pArg)
       ESP_ERROR_CHECK(esp_console_cmd_register(&findunit_cmd));
       ESP_ERROR_CHECK(esp_console_cmd_register(&meshreset_cmd));
       ESP_ERROR_CHECK(esp_console_cmd_register(&ota_cmd));
+      ESP_ERROR_CHECK(esp_console_cmd_register(&node_cmd));
     }
   ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
   ESP_ERROR_CHECK(esp_console_start_repl(repl));
