@@ -63,8 +63,8 @@ EXTERN char                         gwStr[20],*tempb,iv[16],key[32],cmdQueue[60]
                                     emergencyQueue[60],cmdBroadcast[60],discoQueue[60],installQueue[60],*globalDupStr;
 EXTERN mesh_addr_t                  GroupID; 
 EXTERN master_node_t                masterNode;
-EXTERN esp_console_cmd_t            ota_cmd,fram_cmd,meter_cmd,mid_cmd,config_cmd,erase_cmd,loglevel_cmd,basetimer_cmd,prepaid_cmd,resetconf_cmd,
-                                    aes_cmd,security_cmd,app_cmd,node_cmd,log_cmd,adc_cmd,findunit_cmd,meshreset_cmd;
+EXTERN esp_console_cmd_t            node_cmd,ota_cmd,fram_cmd,meter_cmd,mid_cmd,config_cmd,erase_cmd,loglevel_cmd,basetimer_cmd,prepaid_cmd,resetconf_cmd,
+                                    aes_cmd,security_cmd,app_cmd,log_cmd,adc_cmd,findunit_cmd,meshreset_cmd;
 EXTERN gpio_config_t 	            io_conf;
 EXTERN FILE*                        myFile;
 EXTERN TaskHandle_t                 adc_task_handle,blinkHandle,ssidHandle;
@@ -77,5 +77,8 @@ EXTERN meshp_t                      param;
 EXTERN meterClass                   theMeter;
 EXTERN lv_disp_t                   *disp;
 EXTERN esp_lcd_panel_handle_t       panel_handle;
-
+EXTERN esp_lcd_panel_io_handle_t    io_handle;
+EXTERN esp_timer_handle_t           lvgl_tick_timer;
+EXTERN lv_display_t                 *display;
+EXTERN void                         *dispbuf;
 #endif
