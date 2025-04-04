@@ -158,22 +158,3 @@
 #define BEATTIMER                       (10000)
 #define SSIDBLINKTIME                   (80)
 #define MINTICKSISR                     (10)            //very importante, debouncing time
-
-
-#define EXAMPLE_LCD_PIXEL_CLOCK_HZ    (400 * 1000)
-#define EXAMPLE_PIN_NUM_SDA           2
-#define EXAMPLE_PIN_NUM_SCL           42
-#define EXAMPLE_PIN_NUM_RST           -1
-#define EXAMPLE_I2C_HW_ADDR           0x3C
-
-// The pixel number in horizontal and vertical
-#define EXAMPLE_LCD_H_RES              128
-#define EXAMPLE_LCD_V_RES              64
-// Bit number used to represent command and parameter
-#define EXAMPLE_LCD_CMD_BITS           8
-#define EXAMPLE_LCD_PARAM_BITS         8
-
-#define EXAMPLE_LVGL_TICK_PERIOD_MS    5
-#define EXAMPLE_LVGL_TASK_STACK_SIZE   (4 * 1024)
-#define EXAMPLE_LVGL_TASK_PRIORITY     2
-#define EXAMPLE_LVGL_PALETTE_SIZE      8

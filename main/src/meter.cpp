@@ -2667,7 +2667,7 @@ void app_main(void)
         ret=init_lcd();
         if(ret==ESP_OK)
         {
-            xTaskCreate(&displayManager,"dMgr",1024*20,NULL, 5, NULL); 	       
+            xTaskCreate(&displayManager,"dMgr",1024*4,NULL, 5, NULL); 	       
             gdispf=true;
         } 
     #endif
@@ -2693,7 +2693,7 @@ void app_main(void)
 // todo refactor all this
     xTaskCreate(&root_timer,"reptimer",1024*8,NULL, 5, NULL); 	        
 // the internal mesh is now going to start and begin all the main flow from its gotIp event manager
-    // start_mesh();
+    start_mesh();
     
     ESP_LOGI(MESH_TAG,"Heap Free APP %d",esp_get_free_heap_size());
        
