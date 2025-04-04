@@ -55,7 +55,7 @@ void displayManager(void *arg)
 				ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, false));
 				vTaskDelete(showHandle);
 				showHandle=NULL;
-				lvHandle=NULL;
+				// lvHandle=NULL;
 			}
 			else
 			{
@@ -65,6 +65,7 @@ void displayManager(void *arg)
 				{ 				
 					vTaskDelete(showHandle);
 					ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, false));
+					showHandle=NULL;
 
 				});   
 				xTimerStart(dispTimer,0);
