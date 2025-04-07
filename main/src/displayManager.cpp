@@ -15,6 +15,8 @@ void showData(void * pArg)
 	// lv_obj_add_style(label, &titleStyle, 0);
 	lv_obj_t *label2 = lv_label_create(scr);
 	// lv_obj_add_style(label2, &titleStyle, 0);
+	lv_obj_t *label3 = lv_label_create(scr);
+	const esp_app_desc_t *mip=esp_app_get_description();
 
 
 	while(1)
@@ -22,14 +24,17 @@ void showData(void * pArg)
 		_lock_acquire(&lvgl_api_lock);
 		lv_label_cut_text(label,0,20);
 		lv_label_cut_text(label2,0,20);
+		lv_label_cut_text(label3,0,20);
 		lv_label_set_text_fmt(label,"Beats %d",theMeter.getBeats());
 		lv_label_set_text_fmt(label2,"kWh %d",theMeter.getLkwh());
+		lv_label_set_text_fmt(label3,"v%s",mip->version);
 		// lv_label_set_text(label,losb);
 		// lv_label_set_text(label2,losk);
 		// lv_obj_set_pos(label, 40, 20); 
 		// lv_obj_set_pos(label2, 40, 80); 
-		lv_obj_align(label,LV_ALIGN_TOP_MID, 0, 7);
-		lv_obj_align(label2,LV_ALIGN_BOTTOM_MID ,0,-10);
+		lv_obj_align(label3,LV_ALIGN_TOP_MID, 0, 0);
+		lv_obj_align(label,LV_ALIGN_TOP_MID, 0, 20);
+		lv_obj_align(label2,LV_ALIGN_BOTTOM_MID ,0,-6);
 		_lock_release(&lvgl_api_lock);
 		delay(1000);
 	}

@@ -247,7 +247,11 @@ esp_err_t send_metrics_message(char *mid)
         root=cJSON_CreateObject();
         if(root)
         {
+            const esp_app_desc_t *mip=esp_app_get_description();
+
             cJSON_AddStringToObject(root,"cmd",internal_cmds[METRICRESP]);
+            if(mip)
+                cJSON_AddStringToObject(root,"version",mip->version);
             cJSON_AddStringToObject(root,"mid",mid);
             cJSON_AddNumberToObject(root,"kwh",theMeter.getLkwh());
             cJSON_AddNumberToObject(root,"beat",theMeter.getBeats());
@@ -863,7 +867,7 @@ void set_sta_cmd(char *cjText)      //message from Root giving stations ids and 
         theConf.provincia=prov->valueint;
         theConf.parroquia=parro->valueint;
         theConf.canton=cant->valueint;
-        theConf.controllerid=nodeid->valueint;   
+        // theConf.controllerid=nodeid->valueint;   // now the mesh and node are the same
         strcpy(theConf.mqttServer,mqttserver->valuestring);
         strcpy(theConf.mqttUser,mqttuser->valuestring);
         strcpy(theConf.mqttPass,mqttpass->valuestring);
@@ -1572,8 +1576,10 @@ esp_err_t check_security(cJSON * cmd)
 
 void root_mqttMgr(void *pArg)
 {
-    mqttMsg_t mqttHandle;
-	cJSON 	*elcmd;
+    mqttMsg_t           mqttHandle;
+    mqttSender_t        mqttMsg;
+	cJSON 	            *elcmd;
+
     while(true)
     {
         if( xQueueReceive( mqttQ, &mqttHandle, portMAX_DELAY ))	//mqttHandle has a pointer to the original message. MUST be freed at some point
@@ -1609,7 +1615,24 @@ void root_mqttMgr(void *pArg)
                                     ESP_LOGW(MESH_TAG,"Invalid security challenge");
                                 }
                                 else    
+                                {
                                     ESP_LOGE(MESH_TAG,"Invalid cmd received %s",order->valuestring);
+                                    mqttMsg.queue=emergencyQueue;   // fall thru  
+                                    char *message=(char*)calloc(1,strlen((char*)mqttHandle.message)+50);   //will be freed by mqttsender at delivery confirmation
+                                    sprintf(message,"Invalid Cmd [%s]",(char*)mqttHandle.message);
+                                    // memcpy(message,order->valuestring,strlen(order->valuestring));
+                                    //need to free msg from fram find him
+                                    mqttMsg.msg=message;
+                                    mqttMsg.lenMsg=strlen(message);
+                                    mqttMsg.code=NULL;
+                                    mqttMsg.param=NULL; 
+                                    if(xQueueSend(mqttSender,&mqttMsg,0)!=pdTRUE)      //will free message malloc
+                                    {
+                                        ESP_LOGE(MESH_TAG,"Error queueing msg invalid cmd");
+                                        if(mqttMsg.msg)
+                                            free(mqttMsg.msg);  //due to failure
+                                    }
+                                }
                             }
                             else
                                 ESP_LOGE(MESH_TAG,"No order received %s",a);
@@ -1959,6 +1982,7 @@ void init_process()
     // mesh id as we cannot use static variable configuration
     memset(MESH_ID,0x77,6);
     MESH_ID[5]=FIXEDMESH+1;
+    MESH_ID[5]=theConf.controllerid;
     esp_log_buffer_hex(MESH_TAG,&MESH_ID,6);
     mqttf=false;
     memset(&GroupID.addr ,0xff,6);

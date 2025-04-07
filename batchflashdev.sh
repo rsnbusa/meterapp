@@ -5,8 +5,10 @@
 # $PYTHON points to current python set by selecting esp-idf version in vsc bottom left
 # $IDF_TARGET sets the target be it esp32, esp32s3 or whatever. CAN NOT HAVE MIXED chips for obvious reasons
 # searched for all ports available and starts updating firmaware. So disconnect the one not needed to be updated
-# 1 parameter erase 
-#ex: sh batchflashdev.sh --erase Y or no parameter
+# 3 parameters erase host and password
+#ex: sh batchflashdev.sh --erase Y or no parameter to erase all devices ... will output msg saying to set to upload mode again
+#ex: sh batchflashdev.sh --host root@33.33.33.33:/var/www/html --password mama  to upload to a file server
+# or combinations of parameters
 #in VSC use the esp-idf terminal (bottom bar) nexty to build-flash monitor icon 
 
 function msgBox() {
@@ -65,12 +67,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# 1 possible parameters,  erase, usage --erase <Y to erase or nothing>
-if [ "$chip" == "esp32s3" ]; then
-    offset=0x0
-else
-    offset=0x1000
-fi
+# 2 possible parameters,  erase, usage --erase <Y to erase or nothing> and --upload <y to upload to fixed server>
+
 
 #first see if the esp-idf-monitor is using the connection and kill all /dev/tty.u devices 
 var="$(ps aux |grep /dev/tty.u |grep -v grep | grep esp_idf_monitor| awk '{print $2}')"
@@ -147,7 +145,7 @@ cd build
 
 for (( i=0;i<$cnt;i++)); do
     portt="${devs[$i]}"
-lvar="$PYTHON $IDF_PATH/components/esptool_py/esptool/esptool.py -p "/dev/$portt" -b 1500000 --before default_reset --after hard_reset --chip $IDF_TARGET write_flash --flash_mode dio --flash_freq 80m --flash_size 4MB 0x0 bootloader/bootloader.bin 0x20000 metermgr.bin 0x8000 partition_table/partition-table.bin 0xf000 ota_data_initial.bin >/tmp/f$num 2>/dev/null &"
+lvar="$PYTHON $IDF_PATH/components/esptool_py/esptool/esptool.py -p "/dev/$portt" -b 1500000 --before default_reset --after hard_reset --chip $IDF_TARGET write_flash --flash_mode dio --flash_freq 80m --flash_size 4MB 0x0 bootloader/bootloader.bin 0x20000 $projname 0x8000 partition_table/partition-table.bin 0xf000 ota_data_initial.bin >/tmp/f$num 2>/dev/null &"
 eval $lvar      #execute it
     lospids+="$! "  # need the space is just a bunch of letters now
     ((num++))       # for tmps files
@@ -175,3 +173,11 @@ for (( i=0;i<$cnt;i++)); do
 done 
 # kill $(ps u | grep Python | grep -v grep | awk '{print $2}')
 kill -9 $(ps u |grep /dev/tty. |grep -v grep | awk '{print $2}')
+size=${#host} 
+if [ $size -gt 0 ]; then
+    msgBox "Ready to Upload to $host"
+    server="sshpass -p $password scp $projname $host"
+    eval $server
+    msgBox "Upload concluded"
+fi
+#install sshpass with brew if error
