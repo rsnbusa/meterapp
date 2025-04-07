@@ -118,7 +118,8 @@ int get_routing_table()
             }
         }
 
-        bzero(&masterNode,sizeof(masterNode));  //always zero this stuff
+        // if skip is implemented can not zero this
+        // bzero(&masterNode,sizeof(masterNode));  //always zero this stuff
         taskENTER_CRITICAL( &xTimerLock );
         err=esp_mesh_get_routing_table((mesh_addr_t *) &masterNode.theTable.big_table,MAXNODES * 6, &masterNode.existing_nodes);
         taskEXIT_CRITICAL( &xTimerLock );
@@ -180,6 +181,27 @@ int root_load_routing_table_mac(mesh_addr_t *who,void *ladata)
                 masterNode.theTable.thedata[a]=ladata;              //new pointer
                 // printf("Add meter [%s]\n",aNode->nodedata.metersData.meter_id);
                 strcpy(masterNode.theTable.meterName[a],aNode->nodedata.metersData.meter_id);
+                // check if we skip sending it
+                masterNode.theTable.sendit[a]=true;     //default send it
+        printf("load routing stored kwh %d incoming kwh %d\n",masterNode.theTable.lastkwh[a],aNode->nodedata.metersData.kwhlife);
+                if(masterNode.theTable.lastkwh[a]==aNode->nodedata.metersData.kwhlife)  //save kwh vs received kwh
+                {   //its the same reading check maxskips
+                    if(masterNode.theTable.skipcounter[a]>=theConf.maxSkips)
+                    {
+                        masterNode.theTable.sendit[a]=true;
+                        masterNode.theTable.skipcounter[a]=0;
+                    }
+                    else
+                    {
+                        masterNode.theTable.sendit[a]=false;
+                        masterNode.theTable.skipcounter[a]++;
+                    }
+                }
+                else
+                {
+                    masterNode.theTable.skipcounter[a]=0;
+                    masterNode.theTable.lastkwh[a]=aNode->nodedata.metersData.kwhlife;
+                }
 
                 xSemaphoreGive(tableSem);
                 return ESP_OK;
@@ -627,7 +649,9 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
 {
     mqttSender_t        mqttMsg;
     meshunion_t*        aNode;
-
+    uint8_t             finalcount;
+    uint8_t             *todo,*copystart;
+    uint32_t            totalSize;
     theMeter.setStatsLastMeterCount(cuantos);
             // TickType_t xRemainingTime =xTimerGetExpiryTime( sendMeterTimer ) - xTaskGetTickCount();
             // ESP_LOGI(MESH_TAG,"Collect Data time %dms",10000-pdTICKS_TO_MS(xRemainingTime));
@@ -637,10 +661,22 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
            
             uint32_t hp=esp_get_free_heap_size();
             ESP_LOGW(MESH_TAG,"Collected NODES heap %d son %d",hp,cuantos);
+//new option to send only changes
+// check if sending for each node
+// adjust cuantos to reflect this change if any
+    uint8_t menos=0;
 
-            int totalSize=(cuantos*sizeof(meshunion_t))+sizeof(uint32_t)+sizeof(uint32_t); // node count and heap for debugging. Cuantos used alos in teimout call to send just CUANTOS nodes
-            uint8_t *todo=(uint8_t*)calloc(totalSize,1);
-            uint8_t *copystart=todo;                                                // variable todo will be increased so we need original start
+    for(int a=0;a<cuantos;a++)
+    {
+        if(!masterNode.theTable.sendit[a])
+            menos++;
+    }  
+
+            finalcount=cuantos-menos;
+            totalSize=(finalcount*sizeof(meshunion_t))+sizeof(uint32_t)+sizeof(uint32_t); // node count and heap for debugging. Cuantos used alos in teimout call to send just CUANTOS nodes
+            // int totalSize=(cuantos*sizeof(meshunion_t))+sizeof(uint32_t)+sizeof(uint32_t); // node count and heap for debugging. Cuantos used alos in teimout call to send just CUANTOS nodes
+            todo=(uint8_t*)calloc(totalSize,1);
+            copystart=todo;                                                // variable todo will be increased so we need original start
             memcpy(todo,&cuantos,sizeof(uint32_t));                                  //node count
             todo+=sizeof(cuantos);                                                  //move ptr 4 bytes
             memcpy(todo,&hp,sizeof(uint32_t));                                            //heap count
@@ -649,23 +685,40 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
 
             for (int a=0;a<cuantos;a++)                                             //data is stored in the MasterNode Structure
             {
-                if(masterNode.theTable.thedata[a])                                  //if data present
+                if(masterNode.theTable.sendit[a])
                 {
-                    memcpy(todo,masterNode.theTable.thedata[a],sizeof(meshunion_t));
-                    todo+=sizeof(meshunion_t);                                                              //increase pointer by meshunion size
+                    if(masterNode.theTable.thedata[a])                                  //if data present
+                    {
+                        printf("Adding pos %d\n",a);
+                        memcpy(todo,masterNode.theTable.thedata[a],sizeof(meshunion_t));
+                        todo+=sizeof(meshunion_t);                                                              //increase pointer by meshunion size
+                    }
+                    else 
+                        printf("Error null data on node %d\n",a);
                 }
-                else 
-                    printf("Error null data on node %d\n",a);
             }
 
             if(root_delete_routing_table()!=ESP_OK)
             {
                 ESP_LOGE(MESH_TAG,"Error deleting Routing table");
                 free(copystart);
+                copystart=NULL;
                 return ESP_FAIL;
 
             }
+            if(finalcount==0)
+            {
+                printf("Not sending total size %d count %d\n",totalSize,finalcount);
+                if(copystart)
+                    free(copystart);
+                copystart=NULL;
+                 //since nothing added , the Mqtt Sender will not restart the loop timer
+                 sendMeterf=false;
+                if( xTimerStart(repeatTimer, 0 ) != pdPASS )
+                    ESP_LOGE(MESH_TAG,"Repeat Timer collected  failed");   
 
+                return ESP_OK;          //nothing to send or to do
+            }
             //send mqtt msg. Use mqtt queue
             mqttMsg.queue=                      infoQueue;
             mqttMsg.msg=                        (char*)copystart;
@@ -2179,6 +2232,8 @@ void erase_config()
     theConf.gVref=              ADCVREF;
     theConf.maxAmp=             ADCMAXAMP;
     theConf.minAmp=             ADCMINAMP;
+
+    theConf.maxSkips=           10;
     
     strcpy(theConf.kpass,"csttpstt");
     write_to_flash();
@@ -2686,6 +2741,9 @@ void app_main(void)
 {
     esp_err_t ret;
     init_process();  
+    if (theConf.maxSkips==0)
+        theConf.maxSkips=10;
+    theConf.maxSkips=3;
     gdispf=false;
     #ifdef DISPLAY
         ret=init_lcd();

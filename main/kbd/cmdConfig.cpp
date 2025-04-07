@@ -98,7 +98,7 @@ uint32_t nada;    // this is compiler error, it goes crazy if done directly like
   printf("Info Topic \t\t%s\n",infoQueue);
   printf("DisCon Topic \t\t%s\n",discoQueue);
   printf("Install Topic \t\t%s\n",installQueue);
-  printf("Mqtt server [%s] pass [%s] user [%s]\n",theConf.mqttServer,theConf.mqttPass,theConf.mqttUser);
+  printf("Mqtt server [%s] pass [%s] user [%s] Skips [%d]\n",theConf.mqttServer,theConf.mqttPass,theConf.mqttUser,theConf.maxSkips);
 
   printf("\n\t\t\t FRAM Stuff\n");
   printf("\t\t\t ============\n");
@@ -135,7 +135,8 @@ uint32_t nada;    // this is compiler error, it goes crazy if done directly like
         if(routet<11)
         {
           for (int a=0;a<routet;a++)
-            printf("\tMAC[%d]:" MACSTR " %s MeterId [%s]\n",a,MAC2STR(s_route_table[a].addr),MAC_ADDR_EQUAL(s_route_table[a].addr, my_mac)?"ME":"",masterNode.theTable.meterName[a]);
+            printf("\tMAC[%d]:" MACSTR " %s MeterId [%s] Send [%s] Skip [%d]\n",a,MAC2STR(s_route_table[a].addr),MAC_ADDR_EQUAL(s_route_table[a].addr, my_mac)?"ME":"",masterNode.theTable.meterName[a],
+                masterNode.theTable.sendit[a]?"Y":"N",masterNode.theTable.skipcounter[a]);
         }
         else
           printf("There are %d nodes\n",routet);
