@@ -81,6 +81,7 @@ typedef struct medidores_mac{
     uint32_t        lastkwh[MAXNODES];
     uint8_t         skipcounter[MAXNODES];
     bool            sendit[MAXNODES];
+    uint8_t         onoff[MAXNODES];
 } medidores_mac_t;
 
 typedef struct master_Node{
@@ -148,6 +149,7 @@ typedef struct config {
     uint8_t     useSec;
     char        OTAURL[100];
     uint8_t     maxSkips;
+    bool        allowSkips;
 } config_flash;
 
 typedef struct meshp{

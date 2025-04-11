@@ -611,14 +611,12 @@ time_t meterClass::getStatsLastCountTS()
 {
     return framConfig.theStats.lastCountTS;
 }
-
 //setters 
 
 void meterClass::setStatsLastNodeCount(uint8_t hmany)
 {
     framConfig.theStats.lastNodeCount=hmany;
 }
-
 
 void meterClass::setStatsLastMeterCount(uint8_t hmany)
 {
@@ -655,12 +653,8 @@ void meterClass::setStatsBytesOut(uint32_t hmany)
     framConfig.theStats.bytesOut+=hmany;
 }
 
-
 void meterClass::setStatsBytesIn(uint32_t hmany)
 {
     framConfig.theStats.bytesIn+=hmany;
 }
-
-
-
     #endif

@@ -103,6 +103,7 @@
 #define TURNON                          (0)
 #define MINPREPAID                      (1)       //as of today aprox $1
 #define MESHTIMEOUT                     (10000)
+#define SKIPS                           (3)
 // Error codes
 #define METERB                          (-4000)
 #define M_AES_MALLOC                    (METERB+0)

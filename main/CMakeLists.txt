@@ -38,6 +38,7 @@ set (src
     kbd/cmdResetConf.cpp
     kbd/cmdSecurity.cpp
     kbd/cmdNode.cpp
+    kbd/cmdSkip.cpp
     )
 
     set (html 

@@ -26,7 +26,7 @@ Start firmaware update
 Turn on/off Display in seconds
 { "cmdarr":[{"cmd":"display","f":"xxxxxx","mid":"themeter","time":1000}]}
 
-Local a Meter Id.... its an array of possible locks for the same node
+Lock a Meter Id.... its an array of possible locks for the same node
 { "cmdarr":[{"cmd":"lock","disCon":[{"mid":"meterid","state":0}]}]}
 
 All cmds are inside a Command Array

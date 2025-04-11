@@ -183,7 +183,8 @@ int root_load_routing_table_mac(mesh_addr_t *who,void *ladata)
                 strcpy(masterNode.theTable.meterName[a],aNode->nodedata.metersData.meter_id);
                 // check if we skip sending it
                 masterNode.theTable.sendit[a]=true;     //default send it
-        printf("load routing stored kwh %d incoming kwh %d\n",masterNode.theTable.lastkwh[a],aNode->nodedata.metersData.kwhlife);
+                masterNode.theTable.onoff[a]=aNode->nodedata.metersData.poweroff;     //default send it
+        // printf("load routing stored kwh %d incoming kwh %d\n",masterNode.theTable.lastkwh[a],aNode->nodedata.metersData.kwhlife);
                 if(masterNode.theTable.lastkwh[a]==aNode->nodedata.metersData.kwhlife)  //save kwh vs received kwh
                 {   //its the same reading check maxskips
                     if(masterNode.theTable.skipcounter[a]>=theConf.maxSkips)
@@ -660,24 +661,31 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
             //since its binary and can change the number of nodes, first uint32 of message is the number of Nodes in this message
            
             uint32_t hp=esp_get_free_heap_size();
-            ESP_LOGW(MESH_TAG,"Collected NODES heap %d son %d",hp,cuantos);
 //new option to send only changes
 // check if sending for each node
 // adjust cuantos to reflect this change if any
     uint8_t menos=0;
+    uint32_t tosend=0;
 
-    for(int a=0;a<cuantos;a++)
+    //skip any node that has the do not send AND is powered on. If powered off skip this skip jaja
+    if(theConf.allowSkips)
     {
-        if(!masterNode.theTable.sendit[a])
-            menos++;
-    }  
+        for(int a=0;a<cuantos;a++)
+        {
+            if(!masterNode.theTable.sendit[a] && !masterNode.theTable.onoff[a])
+                menos++;
+        }  
+    }
+    tosend=cuantos-menos;     
+    ESP_LOGW(MESH_TAG,"Collected NODES heap %d nodes %d send %d",hp,cuantos,tosend);
 
             finalcount=cuantos-menos;
             totalSize=(finalcount*sizeof(meshunion_t))+sizeof(uint32_t)+sizeof(uint32_t); // node count and heap for debugging. Cuantos used alos in teimout call to send just CUANTOS nodes
             // int totalSize=(cuantos*sizeof(meshunion_t))+sizeof(uint32_t)+sizeof(uint32_t); // node count and heap for debugging. Cuantos used alos in teimout call to send just CUANTOS nodes
             todo=(uint8_t*)calloc(totalSize,1);
-            copystart=todo;                                                // variable todo will be increased so we need original start
-            memcpy(todo,&cuantos,sizeof(uint32_t));                                  //node count
+            copystart=todo;                                           // variable todo will be increased so we need original start
+            memcpy(todo,&tosend,sizeof(uint32_t));                                  //node count
+            // memcpy(todo,&cuantos,sizeof(uint32_t));                                  //node count
             todo+=sizeof(cuantos);                                                  //move ptr 4 bytes
             memcpy(todo,&hp,sizeof(uint32_t));                                            //heap count
             todo+=sizeof(hp);                                                       //move ptr 4 bytes
@@ -685,11 +693,11 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
 
             for (int a=0;a<cuantos;a++)                                             //data is stored in the MasterNode Structure
             {
-                if(masterNode.theTable.sendit[a])
+                if(masterNode.theTable.sendit[a] && theConf.allowSkips)
                 {
                     if(masterNode.theTable.thedata[a])                                  //if data present
                     {
-                        printf("Adding pos %d\n",a);
+                        // printf("Adding pos %d\n",a);
                         memcpy(todo,masterNode.theTable.thedata[a],sizeof(meshunion_t));
                         todo+=sizeof(meshunion_t);                                                              //increase pointer by meshunion size
                     }
@@ -708,7 +716,7 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
             }
             if(finalcount==0)
             {
-                printf("Not sending total size %d count %d\n",totalSize,finalcount);
+                // printf("Not sending total size %d count %d\n",totalSize,finalcount);
                 if(copystart)
                     free(copystart);
                 copystart=NULL;
@@ -719,6 +727,7 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
 
                 return ESP_OK;          //nothing to send or to do
             }
+            esp_log_buffer_hex("SEND",copystart,totalSize);
             //send mqtt msg. Use mqtt queue
             mqttMsg.queue=                      infoQueue;
             mqttMsg.msg=                        (char*)copystart;
@@ -2221,11 +2230,11 @@ void erase_config()
     theConf.mqttcertlen=ssllen;
 
     time((time_t*)&theConf.bornDate); 
-    theConf.loglevel=3;
-    theConf.baset=10;
-    theConf.repeat=25; // change before production
-    theConf.totalnodes=EXPECTED_NODES;
-    theConf.conns=EXPECTED_CONNS;
+    theConf.loglevel=           3;
+    theConf.baset=              10;
+    theConf.repeat=             25; // change before production
+    theConf.totalnodes=         EXPECTED_NODES;
+    theConf.conns=              EXPECTED_CONNS;
 
     theConf.gFreq=              ADCFREQ;
     theConf.biasAmp=            ADCBIAS;
@@ -2233,7 +2242,8 @@ void erase_config()
     theConf.maxAmp=             ADCMAXAMP;
     theConf.minAmp=             ADCMINAMP;
 
-    theConf.maxSkips=           10;
+    theConf.maxSkips=           SKIPS;
+    theConf.allowSkips=         true;
     
     strcpy(theConf.kpass,"csttpstt");
     write_to_flash();
@@ -2743,7 +2753,6 @@ void app_main(void)
     init_process();  
     if (theConf.maxSkips==0)
         theConf.maxSkips=10;
-    theConf.maxSkips=3;
     gdispf=false;
     #ifdef DISPLAY
         ret=init_lcd();

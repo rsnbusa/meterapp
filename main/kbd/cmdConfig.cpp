@@ -135,8 +135,8 @@ uint32_t nada;    // this is compiler error, it goes crazy if done directly like
         if(routet<11)
         {
           for (int a=0;a<routet;a++)
-            printf("\tMAC[%d]:" MACSTR " %s MeterId [%s] Send [%s] Skip [%d]\n",a,MAC2STR(s_route_table[a].addr),MAC_ADDR_EQUAL(s_route_table[a].addr, my_mac)?"ME":"",masterNode.theTable.meterName[a],
-                masterNode.theTable.sendit[a]?"Y":"N",masterNode.theTable.skipcounter[a]);
+            printf("\tMAC[%d]:" MACSTR " %s MeterId [%s] Send [%s] PWR[%s] Skip [%s] Skipped [%d/%d]\n",a,MAC2STR(s_route_table[a].addr),MAC_ADDR_EQUAL(s_route_table[a].addr, my_mac)?"ME":"",masterNode.theTable.meterName[a],
+                masterNode.theTable.sendit[a]?"Y":"N",masterNode.theTable.onoff[a]?"Off":"On",theConf.allowSkips?"Yes":"No",masterNode.theTable.skipcounter[a],theConf.maxSkips);
         }
         else
           printf("There are %d nodes\n",routet);

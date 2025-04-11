@@ -51,6 +51,7 @@ int cmdLog(int argc, char **argv);
 int cmdAdc(int argc, char **argv);
 int cmdApp(int argc, char **argv);
 int cmdNode(int argc, char **argv);
+int cmdSkip(int argc, char **argv);
 int cmdEnDecrypt(int argc, char **argv);
 int cmdConfig(int argc, char **argv);
 int cmdFindUnit(int argc, char **argv);

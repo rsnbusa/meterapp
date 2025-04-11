@@ -57,6 +57,7 @@ int cmdSecurity(int argc, char **argv)
       ESP_ERROR_CHECK(esp_console_cmd_register(&meshreset_cmd));
       ESP_ERROR_CHECK(esp_console_cmd_register(&fram_cmd));
       ESP_ERROR_CHECK(esp_console_cmd_register(&node_cmd));
+      ESP_ERROR_CHECK(esp_console_cmd_register(&skip_cmd));
 
     }
     else

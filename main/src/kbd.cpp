@@ -55,19 +55,24 @@ void kbd(void *pArg)
   appNode.nopass=                   arg_str0(NULL, "l", "nA", "Node Change");
   appNode.end=                      arg_end(3);
 
-  logArgs.show =                  arg_int0(NULL, "show", "# of lines", "Show logs");
-  logArgs.erase =                 arg_int0(NULL, "erase", "0/1" ,"Erase logs");
-  logArgs.end =                   arg_end(2);
+  appSkip.password=                 arg_str0(NULL, "p", "password", "Skip cmd");
+  appSkip.newpass=                  arg_str0(NULL, "s", "skip count", "Skip cmd");
+  appSkip.nopass=                   arg_str0(NULL, "a", "active", "Skip Cmd");
+  appSkip.end=                      arg_end(3);
 
-  adcArgs.start=                  arg_int0(NULL, "s", "Start ADC Mgr ", "ADC Mgr");
-  adcArgs.kill=                   arg_int0(NULL, "k", "Stop ADC Mgr", "ADC Mgr");
-  adcArgs.vref=                   arg_dbl0(NULL, "v", "Vref", "ADC Mgr");
-  adcArgs.freq=                   arg_int0(NULL, "f", "Freq", "ADC Mgr");
-  adcArgs.bias=                   arg_int0(NULL, "b", "Bias", "ADC Mgr");
-  adcArgs.delay=                  arg_int0(NULL, "d", "Delay", "ADC Mgr");
-  adcArgs.minAmp=                 arg_dbl0(NULL, "m", "MinAmp", "ADC Mgr");
-  adcArgs.maxAmp=                 arg_dbl0(NULL, "x", "maxAMp", "ADC Mgr");
-  adcArgs.end=                    arg_end(6);
+  logArgs.show =                    arg_int0(NULL, "show", "# of lines", "Show logs");
+  logArgs.erase =                   arg_int0(NULL, "erase", "0/1" ,"Erase logs");
+  logArgs.end =                     arg_end(2);
+
+  adcArgs.start=                    arg_int0(NULL, "s", "Start ADC Mgr ", "ADC Mgr");
+  adcArgs.kill=                     arg_int0(NULL, "k", "Stop ADC Mgr", "ADC Mgr");
+  adcArgs.vref=                     arg_dbl0(NULL, "v", "Vref", "ADC Mgr");
+  adcArgs.freq=                     arg_int0(NULL, "f", "Freq", "ADC Mgr");
+  adcArgs.bias=                     arg_int0(NULL, "b", "Bias", "ADC Mgr");
+  adcArgs.delay=                    arg_int0(NULL, "d", "Delay", "ADC Mgr");
+  adcArgs.minAmp=                   arg_dbl0(NULL, "m", "MinAmp", "ADC Mgr");
+  adcArgs.maxAmp=                   arg_dbl0(NULL, "x", "maxAMp", "ADC Mgr");
+  adcArgs.end=                      arg_end(6);
 
   fram_cmd = {
         .command = "fram",
@@ -190,6 +195,14 @@ void kbd(void *pArg)
         .argtable = &appNode
     };
 
+     skip_cmd= {
+        .command = "skip",
+        .help = "Set node Id",
+        .hint = NULL,
+        .func = &cmdSkip,
+        .argtable = &appSkip
+    };
+
        log_cmd = {
         .command = "log",
         .help = "Log options",
@@ -228,6 +241,7 @@ void kbd(void *pArg)
       ESP_ERROR_CHECK(esp_console_cmd_register(&meshreset_cmd));
       ESP_ERROR_CHECK(esp_console_cmd_register(&ota_cmd));
       ESP_ERROR_CHECK(esp_console_cmd_register(&node_cmd));
+      ESP_ERROR_CHECK(esp_console_cmd_register(&skip_cmd));
     }
   ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
   ESP_ERROR_CHECK(esp_console_start_repl(repl));
