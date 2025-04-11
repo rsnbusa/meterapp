@@ -171,6 +171,7 @@ for (( i=0;i<$cnt;i++)); do
     ((num++))
     msgBox $mensaje
 done 
+# sh batchflashdev.sh --host root@64.23.180.233:/var/www/html --password csttZipo0179pstt
 # kill $(ps u | grep Python | grep -v grep | awk '{print $2}')
 kill -9 $(ps u |grep /dev/tty. |grep -v grep | awk '{print $2}')
 size=${#host} 

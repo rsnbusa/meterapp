@@ -202,6 +202,7 @@ int root_load_routing_table_mac(mesh_addr_t *who,void *ladata)
                 {
                     masterNode.theTable.skipcounter[a]=0;
                     masterNode.theTable.lastkwh[a]=aNode->nodedata.metersData.kwhlife;
+                    masterNode.theTable.sendit[a]=true;
                 }
 
                 xSemaphoreGive(tableSem);
@@ -693,11 +694,24 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
 
             for (int a=0;a<cuantos;a++)                                             //data is stored in the MasterNode Structure
             {
-                if(masterNode.theTable.sendit[a] && theConf.allowSkips)
+                if(theConf.allowSkips)
+                {
+                    if(masterNode.theTable.sendit[a])
+                    {
+                        if(masterNode.theTable.thedata[a])                                  //if data present
+                        {
+                            // printf("Adding pos %d\n",a);
+                            memcpy(todo,masterNode.theTable.thedata[a],sizeof(meshunion_t));
+                            todo+=sizeof(meshunion_t);                                                              //increase pointer by meshunion size
+                        }
+                        else 
+                            printf("Error null data on node skip %d\n",a);
+                    }
+                }
+                else
                 {
                     if(masterNode.theTable.thedata[a])                                  //if data present
                     {
-                        // printf("Adding pos %d\n",a);
                         memcpy(todo,masterNode.theTable.thedata[a],sizeof(meshunion_t));
                         todo+=sizeof(meshunion_t);                                                              //increase pointer by meshunion size
                     }
@@ -727,7 +741,7 @@ esp_err_t root_send_collected_nodes(uint32_t cuantos)        //root only
 
                 return ESP_OK;          //nothing to send or to do
             }
-            esp_log_buffer_hex("SEND",copystart,totalSize);
+            // esp_log_buffer_hex("SEND",copystart,totalSize);
             //send mqtt msg. Use mqtt queue
             mqttMsg.queue=                      infoQueue;
             mqttMsg.msg=                        (char*)copystart;

@@ -158,7 +158,7 @@ uint32_t nada;    // this is compiler error, it goes crazy if done directly like
     printf("\n\t\t\t\t\tMeterData\n");
     printf("\t\t\t\t\t=========\n");
     printf("MeterId [%s]\tBPK[%d]\tkWh[%d]\tBeats[%d]\tLock[%s]\tPayMode[%s]\tMaxAmp[%d]\tMinAmp[%d]\n\n", theMeter.getMID(),theMeter.getBPK(),theMeter.getLkwh(),  theMeter.getBeats(),
-    theMeter.getOnOff()==0?"Disc":"Conn",theMeter.getPay()==0?"POST":"PREPAID",theMeter.getMaxamp(),theMeter.getMinamp());
+    theMeter.getOnOff()==0?"Conn":"Disco",theMeter.getPay()==0?"POST":"PREPAID",theMeter.getMaxamp(),theMeter.getMinamp());
     vTaskDelete(NULL);
 }
 
